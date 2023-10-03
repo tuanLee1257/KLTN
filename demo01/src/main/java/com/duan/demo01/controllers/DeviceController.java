@@ -15,7 +15,7 @@ import java.util.Collections;
 import java.util.List;
 
 @RestController
-@RequestMapping("api/devices")
+@RequestMapping("api/device")
 public class DeviceController {
     private DeviceService deviceService;
 
@@ -30,24 +30,24 @@ public class DeviceController {
     }
 
     @PostMapping("/add")
-    public ResponseEntity<String> addDevice(@RequestBody Device device, MultipartFile file) {
+    public ResponseEntity<String> addDevice(@RequestPart("device") Device device,@RequestPart("file") MultipartFile file) {
         deviceService.addDevice(device,file);
         return ResponseEntity.ok("Complete");
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<String> update(@PathVariable String id, @RequestBody Device device) {
-        deviceService.updateDevice(Integer.valueOf(id), device);
+    @PostMapping("/update")
+    public ResponseEntity<String> update(@RequestBody Device device,MultipartFile file) {
+        deviceService.updateDevice(device,file);
         return ResponseEntity.ok("");
     }
 
-    @DeleteMapping("/{id}")
+    @PostMapping("/delete/{id}")
     public ResponseEntity<String> delete(@PathVariable String id) {
         deviceService.removeDevice(Integer.valueOf(id));
         return ResponseEntity.ok("");
     }
 
-    @GetMapping("/{fileName:.+}")
+    @GetMapping("/qr/{fileName:.+}")
     public ResponseEntity<byte[]> getQRImage(@PathVariable String fileName) {
         try {
             byte[] image = deviceService.getDeviceQRCode(fileName);
@@ -56,14 +56,15 @@ public class DeviceController {
             return ResponseEntity.badRequest().build();
         }
     }
-//    @GetMapping("/{fileName:.+}")
-//    public ResponseEntity<byte[]> getDeviceImage(@PathVariable String fileName) {
-//        try {
-//            byte[] image = deviceService.getDeviceQRCode(fileName);
-//            return ResponseEntity.ok().contentType(MediaType.IMAGE_JPEG).body(image);
-//        } catch (Exception e) {
-//            return ResponseEntity.badRequest().build();
-//        }
-//    }
+
+    @GetMapping("/{fileName:.+}")
+    public ResponseEntity<byte[]> getDeviceImage(@PathVariable String fileName) {
+        try {
+            byte[] image = deviceService.getDeviceImage(fileName);
+            return ResponseEntity.ok().contentType(MediaType.IMAGE_JPEG).body(image);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
 }
 

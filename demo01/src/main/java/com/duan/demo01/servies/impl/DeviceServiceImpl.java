@@ -20,6 +20,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -53,15 +54,15 @@ public class DeviceServiceImpl implements DeviceService {
     @Override
     public void addDevice(Device device, MultipartFile file) {
         try {
-            Device deviceAdded = deviceRepo.save(device);
+            Integer id = deviceRepo.findMaxId()+1;
 
-            if (!file.isEmpty()) {
+            if (file != null) {
                 InputStream deviceImage = new ByteArrayInputStream(file.getBytes());
                 String deviceImgName = ImageUtil.uploadFile(deviceImage, "devices");
                 device.setImage(deviceImgName);
             }
 
-            BufferedImage qrCodeImage = QRCodeGenerator.getQRCodeImage(deviceAdded.getId().toString());
+            BufferedImage qrCodeImage = QRCodeGenerator.getQRCodeImage(id.toString());
             ByteArrayOutputStream bytes = new ByteArrayOutputStream();
             ImageIO.write(qrCodeImage, "png", bytes);
             InputStream qrImage = new ByteArrayInputStream(bytes.toByteArray());
@@ -69,6 +70,8 @@ public class DeviceServiceImpl implements DeviceService {
 
             QR qr = new QR();
             qr.setName(qrImgName);
+
+            device.setId(id);
             device.setQr(qr);
 
 
@@ -86,15 +89,21 @@ public class DeviceServiceImpl implements DeviceService {
     }
 
     @Override
-    public void updateDevice(Integer id, Device newDevice) {
-        deviceRepo.findById(id)
-                .ifPresent(device -> {
-                    device.setName(newDevice.getName());
-                    device.setStatus(newDevice.getStatus());
-                    device.setQuantity(newDevice.getQuantity());
-                    device.setDateAcquired(newDevice.getDateAcquired());
-                    deviceRepo.save(device);
-                });
+    public void updateDevice(Device updateDevice, MultipartFile file) {
+        try {
+            String imageName = null;
+            if (updateDevice.getImage() == null){
+                InputStream deviceImage = new ByteArrayInputStream(file.getBytes());
+                imageName = ImageUtil.uploadFile(deviceImage, "devices");
+            }
+            else {
+                imageName = replaceImg(updateDevice.getImage(), file);
+            }
+            updateDevice.setImage(imageName);
+            deviceRepo.save(updateDevice);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -115,19 +124,28 @@ public class DeviceServiceImpl implements DeviceService {
     }
 
     @Override
-    public byte[] getDeviceImage(String deviceName) {
+    public byte[] getDeviceImage(String imageName) {
         try {
             Path storageFolder = Paths.get("devices");
-            Path file = storageFolder.resolve(deviceName);
+            Path file = storageFolder.resolve(imageName);
             Resource resource = new UrlResource(file.toUri());
             if (resource.exists() || resource.isReadable()) {
                 byte[] bytes = StreamUtils.copyToByteArray(resource.getInputStream());
                 return bytes;
             } else {
-                throw new RuntimeException("Could not read file: " + deviceName);
+                throw new RuntimeException("Could not read file: " + imageName);
             }
         } catch (IOException e) {
-            throw new RuntimeException("Could not read file: " + deviceName, e);
+            throw new RuntimeException("Could not read file: " + imageName, e);
         }
+    }
+
+
+    String replaceImg(String imageName, MultipartFile newImage) throws IOException {
+        Path storageFolder = Paths.get("devices");
+        Path file = storageFolder.resolve(imageName);
+        Files.delete(file);
+        InputStream deviceImage = new ByteArrayInputStream(newImage.getBytes());
+        return ImageUtil.uploadFile(deviceImage, "devices");
     }
 }

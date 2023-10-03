@@ -33,7 +33,7 @@ public class Device {
     @Enumerated(EnumType.STRING)
     private DeviceStatus status = DeviceStatus.INACTIVE;
 
-    @ManyToOne()
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "qr_id")
     private QR qr;
 

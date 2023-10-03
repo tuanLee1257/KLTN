@@ -9,6 +9,8 @@
     <title>Dashboard - SB Admin</title>
     <link href="css/styles.css" rel="stylesheet"/>
     <script src="js/datatables-simple-demo.js"></script>
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+    <link rel="stylesheet" href="/resources/demos/style.css">
     <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
     <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
 
@@ -26,6 +28,9 @@
             crossorigin="anonymous"></script>
     <script type="text/javascript" th:inline="javascript">
                   var devices = [[${devices}]] ;
+
+
+
     </script>
     <script type="text/javascript" src="js/device-scripts.js"></script>
 
@@ -95,8 +100,9 @@
                             DataTable Example
                         </div>
                         <div>
-                            <i class=""></i>
-                            Thêm thiết bị
+                            <button class="btn btn-primary" type="button" data-toggle="modal" data-target="#addModal">
+                                Thêm thiết bị
+                            </button>
                         </div>
                     </div>
                     <div class="card-body">
@@ -125,30 +131,11 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
         crossorigin="anonymous"></script>
 </body>
-<div class="modal" th:each="device : ${devices}" th:attr="id=${'removeModal' + device.id}" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-        <form class="modal-content" th:action="@{/device/delete/{id}(id=${device.id})}" th:object="${device}"
-              method="post">
-            <div class="modal-header">
-                <h5 class="modal-title">Xác nhận xóa thiết bị</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                Xác nhận xóa <p th:text="${device.id}"></p> khỏi hệ thống
-            </div>
-            <div class="modal-footer">
-                <button type="submit" class="btn btn-primary">Đồng ý</button>
-                <button class="btn btn-secondary" data-dismiss="modal">Thoát</button>
-            </div>
-        </form>
-    </div>
-</div>
-
 <div class="modal" id="editModal" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
-        <form class="modal-content" id="editForm">
+        <form class="modal-content" id="editForm" enctype="multipart/form-data" th:object="${editDevice}"
+              action="/device/update"
+              method="post">
             <div class="modal-header">
                 <h5 class="modal-title">Cập nhập thông tin thiết bị</h5>
                 <button type="button" class="close form-exit" data-dismiss="modal" aria-label="Close">
@@ -157,12 +144,12 @@
             </div>
             <div class="modal-body">
                 <div class="form-field">
-                    <input type="hidden" id="FORM_DEVICE_ID">
+                    <input type="hidden" id="FORM_DEVICE_ID" th:field="*{id}">
                     <label class="form-label" for="FORM_DEVICE_NAME">
                         Name
                     </label>
                     <div class="form-input-control">
-                        <input class="" id="FORM_DEVICE_NAME">
+                        <input class="" id="FORM_DEVICE_NAME" th:field="*{name}">
                     </div>
                 </div>
                 <div class="form-field">
@@ -170,21 +157,74 @@
                         Date
                     </label>
                     <div class="form-input-control">
-                        <input class="" id="FORM_TIME_INPUT" type="text">
+                        <input class="" id="FORM_TIME_INPUT" type="text" th:field="*{dateAcquired}">
                     </div>
                 </div>
                 <div class="form-field">
                     <label class="form-label" for="FORM_STATUS">
                         STATUS
                     </label>
-                    <select class="form-select form-input-control" aria-label="Default select example" id="FORM_STATUS">
+                    <select class="form-select form-input-control" aria-label="Default select example" id="FORM_STATUS"
+                            th:field="*{status}">
                         <option th:each="status : ${T(com.duan.demo01.models.values.DeviceStatus).values()}"
                                 th:value="${status.name}" th:text="${status.name}"></option>
                     </select>
                 </div>
                 <div class="form-field">
                     <label for="FORM_IMAGE" class="form-label"></label>
-                    <input class="form-control " type="file" id="FORM_IMAGE" accept="image/jpeg, image/png">
+                    <input class="form-control " type="file" id="FORM_IMAGE" accept="image/jpeg, image/png" name="file">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">Đồng ý</button>
+                <button type="button" class="btn btn-secondary" id="device_remove_btn">Xóa</button>
+                <button type="button" class="btn btn-danger form-exit" data-dismiss="modal">Thoát</button>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="modal" id="addModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <form class="modal-content" id="addForm" enctype="multipart/form-data" th:object="${addDevice}"
+              action="/device/add"
+              method="post">
+            <div class="modal-header">
+                <h5 class="modal-title">Cập nhập thông tin thiết bị</h5>
+                <button type="button" class="close form-exit" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-field">
+                    <input type="hidden"  th:field="*{id}">
+                    <label class="form-label" >
+                        Name
+                    </label>
+                    <div class="form-input-control">
+                        <input class=""  th:field="*{name}">
+                    </div>
+                </div>
+                <div class="form-field">
+                    <label class="form-label" for="">
+                        Date
+                    </label>
+                    <div class="form-input-control">
+                        <input class="" type="text" th:field="*{dateAcquired}" id="TIME_PICKER">
+                    </div>
+                </div>
+                <div class="form-field">
+                    <label class="form-label" for="">
+                        STATUS
+                    </label>
+                    <select class="form-select form-input-control" aria-label="Default select example" id=""
+                            th:field="*{status}">
+                        <option th:each="status : ${T(com.duan.demo01.models.values.DeviceStatus).values()}"
+                                th:value="${status.name}" th:text="${status.name}"></option>
+                    </select>
+                </div>
+                <div class="form-field">
+                    <label for="FORM_IMAGE" class="form-label"></label>
+                    <input class="form-control " type="file" accept="image/jpeg, image/png" name="file">
                 </div>
             </div>
             <div class="modal-footer">
@@ -195,7 +235,6 @@
     </div>
 </div>
 </html>
-
 <style>
     .status-box{
         padding:1.5rem 1rem;
@@ -234,6 +273,9 @@
         border: 1px solid #aaa;
         border-radius: 3px;
     }
+
+
+
 
 
 </style>

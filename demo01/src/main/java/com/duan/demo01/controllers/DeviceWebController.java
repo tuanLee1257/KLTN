@@ -25,6 +25,9 @@ public class DeviceWebController {
         try {
             List<Device> devices = deviceService.getAllDevices();
             model.addAttribute("devices", devices);
+            model.addAttribute("editDevice", new Device());
+            model.addAttribute("addDevice", new Device());
+
             return "device-page";
         } catch (Exception e) {
             return "404";
@@ -45,23 +48,22 @@ public class DeviceWebController {
     // ACTION
 
     @PostMapping("/add")
-    public String saveDevice(@ModelAttribute("device") Device device, @RequestParam MultipartFile file) {
+    public String saveDevice(@RequestParam MultipartFile file, @ModelAttribute("addDevice") Device device) {
         deviceService.addDevice(device, file);
-        return "redirect:/";
-
+        return "redirect:/device";
     }
 
     @PostMapping("/delete/{id}")
     public String saveDeleteDevice(@PathVariable("id") Integer deviceId) {
         Device device = deviceService.getDeviceByID(deviceId);
         deviceService.removeDevice(device.getId());
-        return "redirect:/";
+        return "redirect:/device";
     }
 
     @PostMapping("/update")
-    public String updateDevice(@ModelAttribute("device")Device device,@ModelAttribute("device")MultipartFile file) {
-        deviceService.updateDevice(device.getId(),device);
-        return "redirect:/api/devices";
+    public String updateDevice(@RequestParam MultipartFile file, @ModelAttribute("editDevice") Device device) {
+        deviceService.updateDevice(device,file);
+        return "redirect:/device";
     }
 }
 

@@ -10,8 +10,7 @@ public interface DeviceService {
     Device getDeviceByID(Integer id);
     void addDevice(Device device, MultipartFile file);
     void removeDevice(Integer id);
-    void updateDevice(Integer id,Device newDevice);
+    void updateDevice( Device newDevice, MultipartFile file);
     byte[] getDeviceQRCode(String qrName);
     byte[] getDeviceImage(String deviceName);
-
 }
